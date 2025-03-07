@@ -6,20 +6,41 @@ const uncompleted = document.getElementById("uncompletedlist");
 let completedcount = 0;
 let uncompletedcount = 0;
 
+
+document.addEventListener("DOMContentLoaded", loadTasks);
+
 function updatecounters() {
     completed.textContent = completedcount;
     uncompleted.textContent = uncompletedcount;
 }
 
-function addtask() {
-    const newtask = inputtask.value.trim();
-    if (!newtask) {
+
+function saveTasks() {
+    const tasks = [];
+    document.querySelectorAll("#tasklist li").forEach(li => {
+        tasks.push({
+            text: li.textContent.replace("Delete", "").trim(),
+            completed: li.querySelector("input").checked
+        });
+    });
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+
+function loadTasks() {
+    const storedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    storedTasks.forEach(task => addtask(task.text, task.completed));
+}
+
+function addtask(text = inputtask.value.trim(), isCompleted = false) {
+    if (!text) {
         alert("Enter a task");
         return;
     }
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
+    checkbox.checked = isCompleted;
 
     const dltbtn = document.createElement("button");
     dltbtn.textContent = "Delete";
@@ -28,12 +49,16 @@ function addtask() {
     const li = document.createElement("li");
 
     li.appendChild(checkbox);
-    li.appendChild(document.createTextNode(" " + newtask));
+    li.appendChild(document.createTextNode(" " + text));
     li.appendChild(dltbtn);
 
     tasklist.appendChild(li);
 
-    uncompletedcount++;
+    if (isCompleted) {
+        completedcount++;
+    } else {
+        uncompletedcount++;
+    }
     updatecounters();
 
     inputtask.value = "";
@@ -47,6 +72,7 @@ function addtask() {
             uncompletedcount++;
         }
         updatecounters();
+        saveTasks();
     });
     
     dltbtn.addEventListener("click", function () {
@@ -57,5 +83,8 @@ function addtask() {
         }
         tasklist.removeChild(li);
         updatecounters();
+        saveTasks();
     });
+
+    saveTasks();
 }
